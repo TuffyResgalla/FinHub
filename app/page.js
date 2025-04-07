@@ -45,7 +45,6 @@ export default function SimuladorIndependenciaFinanceira() {
 
     const meses = anos * 12;
     const inflacaoAnual = inflacao / 100;
-    const inflacaoMensal = Math.pow(1 + inflacaoAnual, 1 / 12) - 1;
     const rendimentoAnual = rendimento / 100;
     const taxaLiquida = rendimentoAnual * (1 - ir / 100);
     const taxaMensal = Math.pow(1 + taxaLiquida, 1 / 12) - 1;
@@ -54,34 +53,32 @@ export default function SimuladorIndependenciaFinanceira() {
     const custoFuturoAnual = custoFuturoMensal * 12;
     const patrimonioIdeal = custoFuturoAnual / taxaLiquida;
 
+    const aporteMensal = (patrimonioIdeal - patrimonioInicial * Math.pow(1 + taxaMensal, meses)) * taxaMensal / (Math.pow(1 + taxaMensal, meses) - 1);
+
     let saldo = patrimonioInicial;
     let totalAporte = patrimonioInicial;
     const aportes = [patrimonioInicial];
     const rendimentos = [0];
     const tabela = [];
 
-    const aporteMensalInicial = (patrimonioIdeal * taxaMensal / (Math.pow(1 + taxaMensal, meses) - 1));
-
     for (let i = 1; i <= meses; i++) {
-      const aporteCorrigido = aporteMensalInicial * Math.pow(1 + inflacaoMensal, i);
-      const aporteFixo = aporteMensalInicial;
+      saldo = saldo * (1 + taxaMensal) + aporteMensal;
+      totalAporte += aporteMensal;
 
-      saldo = saldo * (1 + taxaMensal) + aporteCorrigido;
-      totalAporte += aporteCorrigido;
       aportes.push(totalAporte);
       rendimentos.push(saldo - totalAporte);
 
       tabela.push({
         mes: i,
-        aporteFixo: aporteFixo,
-        aporteCorrigido: aporteCorrigido,
+        aporteFixo: aporteMensal,
+        aporteCorrigido: aporteMensal,
       });
     }
 
     setResultado({
       custoFuturoMensal,
       patrimonioIdeal,
-      aporteMensal: aporteMensalInicial,
+      aporteMensal,
       saldos: aportes.map((a, i) => a + rendimentos[i]),
       aportes,
       rendimentos,
@@ -143,8 +140,7 @@ export default function SimuladorIndependenciaFinanceira() {
               <h2 className="text-2xl font-semibold text-[#009d71] mb-4">Resultado</h2>
               <p><strong>Custo de vida futuro:</strong> R$ {formatarNumero(resultado.custoFuturoMensal)}</p>
               <p><strong>Patrimônio necessário:</strong> R$ {formatarNumero(resultado.patrimonioIdeal)}</p>
-              <p><strong>Aporte mensal necessário (valor inicial):</strong> R$ {formatarNumero(resultado.aporteMensal)}</p>
-              <p className="text-sm mt-2 text-gray-700">* Este é o valor de entrada. Com aportes corrigidos pela inflação, seu esforço de poupança será constante ao longo do tempo.</p>
+              <p><strong>Aporte mensal necessário:</strong> R$ {formatarNumero(resultado.aporteMensal)}</p>
 
               <div className="mt-6">
                 <Bar
@@ -175,32 +171,6 @@ export default function SimuladorIndependenciaFinanceira() {
                     },
                   }}
                 />
-              </div>
-
-              <div className="mt-8">
-                <h3 className="text-xl font-semibold text-[#009d71] mb-2">Comparativo de Aportes</h3>
-                <p className="text-sm text-gray-700 mb-4">A tabela abaixo compara o valor de aporte mensal fixo com o valor corrigido pela inflação, para manter o esforço real constante.</p>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead>
-                      <tr className="bg-[#009d71] text-white">
-                        <th className="p-2">Mês</th>
-                        <th className="p-2">Aporte Fixo (R$)</th>
-                        <th className="p-2">Aporte Corrigido (R$)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tabelaComparativa.slice(0, 24).map((linha, index) => (
-                        <tr key={index} className="border-b">
-                          <td className="p-2">{linha.mes}</td>
-                          <td className="p-2">{formatarNumero(linha.aporteFixo)}</td>
-                          <td className="p-2">{formatarNumero(linha.aporteCorrigido)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <p className="text-xs text-gray-500 mt-1">* Exibindo os primeiros 24 meses</p>
-                </div>
               </div>
             </CardContent>
           </Card>
