@@ -4,10 +4,17 @@ import React, { useState } from "react";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { Line } from "react-chartjs-2";
-import { Chart as ChartJS, LineElement, CategoryScale, LinearScale, PointElement } from "chart.js";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement);
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default function SimuladorIndependenciaFinanceira() {
   const [form, setForm] = useState({
@@ -46,19 +53,25 @@ export default function SimuladorIndependenciaFinanceira() {
         (Math.pow(1 + taxaMensal, meses) - 1)
       : patrimonioIdeal * taxaMensal / (Math.pow(1 + taxaMensal, meses) - 1);
 
-    // Gerar dados para o gráfico
     let saldo = patrimonioInicial;
-    const saldos = [];
+    let totalAporte = 0;
+    const aportes = [];
+    const rendimentos = [];
+
     for (let i = 0; i <= meses; i++) {
-      saldos.push(saldo);
+      aportes.push(totalAporte);
+      rendimentos.push(saldo - totalAporte);
       saldo = saldo * (1 + taxaMensal) + aporteMensal;
+      totalAporte += aporteMensal;
     }
 
     setResultado({
       custoFuturoMensal,
       patrimonioIdeal,
       aporteMensal,
-      saldos,
+      saldos: aportes.map((a, i) => a + rendimentos[i]),
+      aportes,
+      rendimentos,
     });
   };
 
@@ -68,16 +81,36 @@ export default function SimuladorIndependenciaFinanceira() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Simulador de Independência Financeira</h1>
-      <div className="grid grid-cols-2 gap-4">
-        <Input name="custoVidaAtual" type="number" step="100" value={form.custoVidaAtual} onChange={handleChange} placeholder="Custo de vida mensal atual (R$)" />
-        <Input name="anos" type="number" value={form.anos} onChange={handleChange} placeholder="Anos até a independência" />
-        <Input name="inflacao" type="number" value={form.inflacao} onChange={handleChange} placeholder="Inflação média anual (%)" />
-        <Input name="rendimento" type="number" value={form.rendimento} onChange={handleChange} placeholder="Rendimento médio anual (%)" />
-        <Input name="ir" type="number" value={form.ir} onChange={handleChange} placeholder="IR sobre rendimento (%)" />
-        <Input name="patrimonioInicial" type="number" step="1000" value={form.patrimonioInicial} onChange={handleChange} placeholder="Patrimônio inicial (R$)" />
+      <h1 className="text-3xl font-bold text-center mb-8">FinHub - Simulador de Independência Financeira</h1>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <label>
+          <span className="text-sm">Qual o seu custo de vida hoje? (R$)</span>
+          <Input name="custoVidaAtual" type="number" step="100" value={form.custoVidaAtual} onChange={handleChange} />
+        </label>
+        <label>
+          <span className="text-sm">Quantos anos até a independência financeira?</span>
+          <Input name="anos" type="number" value={form.anos} onChange={handleChange} />
+        </label>
+        <label>
+          <span className="text-sm">Qual a projeção de inflação média ao ano? (%)</span>
+          <Input name="inflacao" type="number" value={form.inflacao} onChange={handleChange} />
+        </label>
+        <label>
+          <span className="text-sm">Qual a expectativa de rendimento anual? (%)</span>
+          <Input name="rendimento" type="number" value={form.rendimento} onChange={handleChange} />
+        </label>
+        <label>
+          <span className="text-sm">Qual o IR sobre o rendimento? (%)</span>
+          <Input name="ir" type="number" value={form.ir} onChange={handleChange} />
+        </label>
+        <label>
+          <span className="text-sm">Quanto você já tem hoje investido? (R$)</span>
+          <Input name="patrimonioInicial" type="number" step="1000" value={form.patrimonioInicial} onChange={handleChange} />
+        </label>
       </div>
-      <Button onClick={calcular} className="mt-4">Calcular</Button>
+
+      <Button onClick={calcular}>Calcular</Button>
 
       {resultado && (
         <Card className="mt-6">
@@ -87,17 +120,32 @@ export default function SimuladorIndependenciaFinanceira() {
             <p><strong>Aporte mensal necessário:</strong> R$ {resultado.aporteMensal.toFixed(2)}</p>
 
             <div className="mt-6">
-              <Line
+              <Bar
                 data={{
                   labels: resultado.saldos.map((_, i) => i),
                   datasets: [
                     {
-                      label: "Evolução do Patrimônio (R$)",
-                      data: resultado.saldos,
-                      borderColor: "#3b82f6",
-                      fill: false,
+                      label: "Aportes (R$)",
+                      data: resultado.aportes,
+                      backgroundColor: "#3b82f6",
+                    },
+                    {
+                      label: "Rendimento (R$)",
+                      data: resultado.rendimentos,
+                      backgroundColor: "#60a5fa",
                     },
                   ],
+                }}
+                options={{
+                  responsive: true,
+                  plugins: {
+                    legend: { position: "top" },
+                    tooltip: { mode: "index", intersect: false },
+                  },
+                  scales: {
+                    x: { stacked: true },
+                    y: { stacked: true },
+                  },
                 }}
               />
             </div>
