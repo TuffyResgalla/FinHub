@@ -53,6 +53,7 @@ function exportarCSV(tabela) {
     formatarNumero(l.rendaPassiva),
   ]);
   const conteudo = [cabecalho, ...linhas].map((e) => e.join(";")).join("
+");")).join("
 ");
   const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
