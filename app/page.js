@@ -35,27 +35,7 @@ function formatarNumero(valor) {
   });
 }
 
-function exportarCSV(tabela) {
-  const cabecalho = [
-    "Mês",
-    "Aporte (R$)",
-    "Rendimento (R$)",
-    "Saldo Total (R$)",
-    "Custo de Vida (R$)",
-    "Renda Passiva (R$)",
-  ];
-  const linhas = tabela.map((l) => [
-    l.mes,
-    formatarNumero(l.aporte),
-    formatarNumero(l.rendimento),
-    formatarNumero(l.saldo),
-    formatarNumero(l.custoVida),
-    formatarNumero(l.rendaPassiva),
-  ]);
-  const conteudo = [cabecalho, ...linhas].map((e) => e.join(";")).join("
-");")).join("
-");
-  const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8;" });
+);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
@@ -214,7 +194,7 @@ export default function Simulador() {
                 <option value={240}>240</option>
               </select>
             </div>
-            <Button onClick={() => exportarCSV(resultado.tabelaMensal)}>Exportar CSV</Button>
+            
           </div>
 
           <div className="overflow-x-auto mt-4">
