@@ -35,13 +35,7 @@ function formatarNumero(valor) {
   });
 }
 
-);
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", "tabela_simulacao.csv");
-  link.click();
-}
+
 
 export default function Simulador() {
   const [form, setForm] = useState({
